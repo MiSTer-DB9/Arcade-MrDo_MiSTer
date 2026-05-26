@@ -1523,9 +1523,14 @@ assign SDCD_SPDIF = (mcp_en & ~spdif) ? 1'b0 : 1'bZ;
 `ifndef MISTER_DUAL_SDRAM
 	wire analog_l, analog_r;
 
-	assign AUDIO_SPDIF = av_dis ? 1'bZ : (SW[0] | mcp_en) ? HDMI_LRCLK : spdif;
-	assign AUDIO_R     = av_dis ? 1'bZ : (SW[0] | mcp_en) ? HDMI_I2S   : analog_r;
-	assign AUDIO_L     = av_dis ? 1'bZ : (SW[0] | mcp_en) ? HDMI_SCLK  : analog_l;
+	// [MiSTer-DB9 BEGIN] - AUDIO_MODE INI override of SW[0]
+	wire [1:0] audio_mode_force = cfg[15:14];
+	wire       audio_route_i2s  = (audio_mode_force == 2'b00) ? (SW[0] | mcp_en) : audio_mode_force[0];
+	// [MiSTer-DB9 END]
+
+	assign AUDIO_SPDIF = av_dis ? 1'bZ : audio_route_i2s ? HDMI_LRCLK : spdif;
+	assign AUDIO_R     = av_dis ? 1'bZ : audio_route_i2s ? HDMI_I2S   : analog_r;
+	assign AUDIO_L     = av_dis ? 1'bZ : audio_route_i2s ? HDMI_SCLK  : analog_l;
 `endif
 
 assign HDMI_MCLK = clk_audio;
@@ -1630,15 +1635,15 @@ assign USER_IO[6] = user_pp[6] ? user_out[6] :                       !user_out[6
 assign USER_IO[7] = user_pp[7] ? user_out[7] :                       !user_out[7]  ? 1'b0 : 1'bZ;
 // [MiSTer-DB9 END]
 
-assign user_in[0] =         USER_IO[0];
-assign user_in[1] =         USER_IO[1];
+assign user_in[0] = USER_IO[0];
+assign user_in[1] = USER_IO[1];
 assign user_in[2] = SW[1] | USER_IO[2];
-assign user_in[3] =         USER_IO[3];
+assign user_in[3] = USER_IO[3];
 assign user_in[4] = SW[1] | USER_IO[4];
 assign user_in[5] = SW[1] | USER_IO[5];
-assign user_in[6] =         USER_IO[6];
+assign user_in[6] = USER_IO[6];
 // [MiSTer-DB9 BEGIN] - DB9/SNAC8 support: USER_IO[7] readback
-assign user_in[7] =         USER_IO[7];
+assign user_in[7] = USER_IO[7];
 // [MiSTer-DB9 END]
 
 
